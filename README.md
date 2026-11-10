@@ -1,6 +1,6 @@
 本项目全程由google aistudio协助完成
 
-# 🎸 KESSOKU RECORD (结束记录)
+# 🎸 BOCCHI THE RECORD 
 
 > **Unofficial Bilibili Index for Kessoku Band**  
 > 《孤独摇滚！》相关视频索引数据库
@@ -12,7 +12,7 @@
 
 ## 📖 项目简介
 
-**KESSOKU RECORD** 是一个专为《孤独摇滚！》(Bocchi the Rock!) 粉丝打造的现代化静态导航站。它旨在整理和索引 Bilibili 上的相关高质量视频，包括动画正片、广播局、演唱会 Live、声优活动以及舞台剧等。
+**BOCCHI THE RECORD** 是一个专为《孤独摇滚！》(Bocchi the Rock!) 粉丝打造的现代化静态导航站。它旨在整理和索引 Bilibili 上的相关高质量视频，包括动画正片、广播局、演唱会 Live、声优活动以及舞台剧等。
 
 本项目采用 **Serverless** 架构，前端部署在边缘网络（Cloudflare Pages / EdgeOne Pages），数据存储采用 KV 键值数据库，无需维护传统后端服务器。
 
@@ -109,11 +109,8 @@
 *   **日期选择**: 系统会自动将时间修正为当天的中午 12:00，避免时区偏差。
 
 ### 4. 备份策略
-虽然数据存储在 KV 中，但为了数据安全：
-1.  在后台点击 **"下载 constants.ts"** 按钮。
-2.  将下载的文件覆盖项目源码中的 `src/constants.ts` (或根目录下的 `constants.ts`)。
-3.  提交代码到 GitHub (`git commit & push`)。
-    *   这样即便是 KV 数据库丢失，新用户访问时也能看到截至备份时的完整数据。
+*    可通过导入/导出json功能备份数据
+*    「导入JSON」 ➔ 「同步到云端 KV」
 
 ---
 
