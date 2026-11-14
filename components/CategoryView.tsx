@@ -1,259 +1,333 @@
-
-import React, { useMemo, useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Search, ArrowLeft, Filter, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
-import { CATEGORY_METADATA, CategoryType, VideoLink, DEFAULT_SUB_CATEGORIES } from '../types';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useParams, Navigate } from 'react-router-dom';
+import {
+  Tv,
+  Radio,
+  Mic2,
+  Music,
+  Sparkles,
+  Calendar,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  X
+} from 'lucide-react';
+import { CATEGORIES } from '../constants';
+import { VideoLink, CategoryType, DEFAULT_SUB_CATEGORIES } from '../types';
 import { VideoCard } from './VideoCard';
-import { getCategoryConfig } from './HomeDashboard';
 
-interface Props {
-    videos: VideoLink[];
+interface CategoryViewProps {
+  videos: VideoLink[];
+  onCategoryView?: (category: CategoryType) => void;
+  onVideoClick?: (video: VideoLink) => void;
 }
 
-const ITEMS_PER_PAGE = 60;
+const PAGE_SIZE = 40;
 
-export const CategoryView: React.FC<Props> = ({ videos }) => {
-    const { type } = useParams<{ type: string }>();
-    const [searchTerm, setSearchTerm] = useState('');
-    const [selectedSub, setSelectedSub] = useState<string>('All');
-    const [selectedYear, setSelectedYear] = useState<string>('All');
-    
-    // Pagination State
-    const [currentPage, setCurrentPage] = useState(1);
+export const CategoryView: React.FC<CategoryViewProps> = ({
+  videos,
+  onCategoryView,
+  onVideoClick
+}) => {
+  const { type } = useParams<{ type: string }>();
+  const [selectedSubCat, setSelectedSubCat] = useState<string>('ALL');
+  const [selectedTag, setSelectedTag] = useState<string>('ALL');
+  const [selectedYear, setSelectedYear] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
-    // Validate type
-    const categoryType = Object.values(CategoryType).find(t => t === type);
-    const meta = categoryType ? CATEGORY_METADATA[categoryType] : null;
+  const categoryConfig = CATEGORIES.find(c => c.id === type);
 
-    // Reset pagination when filters change
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchTerm, selectedSub, selectedYear, type]);
-
-    // 1. Base Category Data
-    const categoryVideos = useMemo(() => {
-        if (!categoryType) return [];
-        return videos.filter(v => v.category === categoryType).sort((a, b) => b.dateAdded - a.dateAdded);
-    }, [videos, categoryType]);
-
-    // 2. Extract Available Filters based on actual data
-    const availableSubCategories = useMemo(() => {
-        // Start with defaults for this category to enforce order
-        const defaults = DEFAULT_SUB_CATEGORIES[categoryType as CategoryType] || [];
-        // Find any other subcategories that exist in the data but aren't in defaults
-        const inData = Array.from(new Set(categoryVideos.map(v => v.subCategory).filter(Boolean))) as string[];
-        
-        // Merge: Defaults first, then others
-        const combined = [...defaults];
-        inData.forEach(sub => {
-            if (!combined.includes(sub)) combined.push(sub);
-        });
-        return combined;
-    }, [categoryVideos, categoryType]);
-
-    const availableYears = useMemo(() => {
-        const years = new Set(categoryVideos.map(v => new Date(v.dateAdded).getFullYear().toString()));
-        return Array.from(years).sort().reverse();
-    }, [categoryVideos]);
-
-    // 3. Apply Filters
-    const filteredVideos = useMemo(() => {
-        let result = categoryVideos;
-
-        // Sub Category Filter
-        if (selectedSub !== 'All') {
-            result = result.filter(v => v.subCategory === selectedSub);
-        }
-
-        // Year Filter
-        if (selectedYear !== 'All') {
-            result = result.filter(v => new Date(v.dateAdded).getFullYear().toString() === selectedYear);
-        }
-
-        // Search Filter
-        if (searchTerm.trim()) {
-            const lowerTerm = searchTerm.toLowerCase();
-            result = result.filter(v => 
-                v.title.toLowerCase().includes(lowerTerm) || 
-                v.subCategory?.toLowerCase().includes(lowerTerm)
-            );
-        }
-
-        return result;
-    }, [categoryVideos, selectedSub, selectedYear, searchTerm]);
-
-    // 4. Pagination Logic
-    const totalPages = Math.ceil(filteredVideos.length / ITEMS_PER_PAGE);
-    const paginatedVideos = useMemo(() => {
-        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-        return filteredVideos.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-    }, [filteredVideos, currentPage]);
-
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    if (!meta || !categoryType) {
-        return <div className="p-8 text-center text-gray-500">Category not found</div>;
+  useEffect(() => {
+    setSelectedSubCat('ALL');
+    setSelectedTag('ALL');
+    setSelectedYear('ALL');
+    setSearchQuery('');
+    setCurrentPage(1);
+    if (categoryConfig) {
+      onCategoryView?.(categoryConfig.id);
     }
+  }, [type]);
 
-    const config = getCategoryConfig(categoryType);
-    const Icon = config.icon;
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedSubCat, selectedTag, selectedYear, searchQuery]);
 
-    return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-            {/* Header & Nav */}
-            <div className="mb-8">
-                <Link to="/" className="inline-flex items-center text-sm text-gray-400 hover:text-gray-600 mb-6 transition-colors">
-                    <ArrowLeft size={16} className="mr-1" />
-                    返回首页
-                </Link>
-                
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-xl ${config.bg}`}>
-                            <Icon size={32} className={config.color} />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">{meta.label}</h1>
-                            <p className="text-gray-500 text-sm mt-1">{meta.description}</p>
-                        </div>
-                    </div>
+  if (!categoryConfig) {
+    return <Navigate to="/" replace />;
+  }
 
-                    <div className="relative w-full md:w-72 group">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search size={18} className="text-gray-400 group-focus-within:text-bili-blue transition-colors" />
-                        </div>
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder={`搜索 ${meta.label}...`}
-                            className="block w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg leading-5 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-bili-blue/20 focus:border-bili-blue transition-all shadow-sm"
-                        />
-                    </div>
-                </div>
+  const categoryVideos = useMemo(() => {
+    return videos
+      .filter(v => v.category === categoryConfig.id)
+      .sort((a, b) => {
+        const timeA = a.dateAdded || new Date(a.addedAt || 0).getTime() || 0;
+        const timeB = b.dateAdded || new Date(b.addedAt || 0).getTime() || 0;
+        return timeB - timeA;
+      });
+  }, [videos, categoryConfig.id]);
+
+  // Subcategories ordered by preset first, then any custom ones
+  const subCategories = useMemo(() => {
+    const presetOrder = DEFAULT_SUB_CATEGORIES[categoryConfig.id] || [];
+    const existingSet = new Set<string>();
+    categoryVideos.forEach(v => {
+      if (v.subCategory) existingSet.add(v.subCategory);
+    });
+    const ordered = presetOrder.filter(sc => existingSet.has(sc));
+    const extras = Array.from(existingSet)
+      .filter(sc => !presetOrder.includes(sc))
+      .sort();
+    return ['ALL', ...ordered, ...extras];
+  }, [categoryVideos, categoryConfig.id]);
+
+  // Available 3rd-level performer/cast tags in this category (or current subCategory)
+  const availableTags = useMemo(() => {
+    const counts: Record<string, number> = {};
+    const baseList =
+      selectedSubCat === 'ALL'
+        ? categoryVideos
+        : categoryVideos.filter(v => v.subCategory === selectedSubCat);
+
+    baseList.forEach(v => {
+      (v.tags || []).forEach(t => {
+        counts[t] = (counts[t] || 0) + 1;
+      });
+    });
+
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([tag, count]) => ({ tag, count }));
+  }, [categoryVideos, selectedSubCat]);
+
+  const years = useMemo(() => {
+    const yrs = new Set<string>();
+    categoryVideos.forEach(v => {
+      const dateStr = v.addedAt || '';
+      const year = dateStr.split('-')[0];
+      if (year && /^\d{4}$/.test(year)) yrs.add(year);
+    });
+    return ['ALL', ...Array.from(yrs).sort().reverse()];
+  }, [categoryVideos]);
+
+  const filteredVideos = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return categoryVideos.filter(v => {
+      const dateStr = v.addedAt || '';
+      const titleStr = v.title || '';
+      const matchSub = selectedSubCat === 'ALL' || v.subCategory === selectedSubCat;
+      const matchTag = selectedTag === 'ALL' || (v.tags || []).includes(selectedTag);
+      const matchYear = selectedYear === 'ALL' || dateStr.startsWith(selectedYear);
+      const matchSearch =
+        !q ||
+        titleStr.toLowerCase().includes(q) ||
+        (v.subCategory && v.subCategory.toLowerCase().includes(q)) ||
+        (v.tags && v.tags.some(t => t.toLowerCase().includes(q)));
+      return matchSub && matchTag && matchYear && matchSearch;
+    });
+  }, [categoryVideos, selectedSubCat, selectedTag, selectedYear, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredVideos.length / PAGE_SIZE));
+  const paginatedVideos = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredVideos.slice(start, start + PAGE_SIZE);
+  }, [filteredVideos, currentPage]);
+
+  const getIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'Tv': return <Tv className="w-6 h-6" />;
+      case 'Radio': return <Radio className="w-6 h-6" />;
+      case 'Mic2': return <Mic2 className="w-6 h-6" />;
+      case 'Music': return <Music className="w-6 h-6" />;
+      case 'Sparkles': return <Sparkles className="w-6 h-6" />;
+      case 'Calendar': return <Calendar className="w-6 h-6" />;
+      default: return <Tv className="w-6 h-6" />;
+    }
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-gray-200">
+        <div className="flex items-center gap-4">
+          <div
+            className="p-3 rounded-2xl text-white shadow-md"
+            style={{ backgroundColor: categoryConfig.color }}
+          >
+            {getIcon(categoryConfig.iconName)}
+          </div>
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl font-bold text-gray-900">{categoryConfig.label}</h1>
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-500">
+                {filteredVideos.length} / {categoryVideos.length}
+              </span>
             </div>
-
-            {/* Filters Toolbar */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-1.5 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                {/* Sub Category Tabs */}
-                <div className="flex flex-wrap gap-1 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
-                    <button
-                        onClick={() => setSelectedSub('All')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                            selectedSub === 'All' 
-                                ? 'bg-gray-900 text-white shadow-md' 
-                                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                    >
-                        全部
-                    </button>
-                    {availableSubCategories.map(sub => (
-                         <button
-                            key={sub}
-                            onClick={() => setSelectedSub(sub)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                                selectedSub === sub 
-                                    ? `bg-gray-900 text-white shadow-md` 
-                                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                            }`}
-                        >
-                            {sub}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Year Selector */}
-                <div className="flex items-center gap-2 w-full sm:w-auto px-2 sm:border-l border-gray-100 sm:pl-4">
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:block">Year</span>
-                    <div className="relative w-full sm:w-auto">
-                        <select 
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(e.target.value)}
-                            className="appearance-none w-full sm:w-32 bg-gray-50 border border-gray-200 text-gray-700 py-2 pl-3 pr-8 rounded-lg text-sm font-medium focus:outline-none focus:border-gray-400 focus:bg-white transition-colors cursor-pointer"
-                        >
-                            <option value="All">所有年份</option>
-                            {availableYears.map(year => (
-                                <option key={year} value={year}>{year}年</option>
-                            ))}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                    </div>
-                </div>
-            </div>
-
-            {/* List Content */}
-            {paginatedVideos.length > 0 ? (
-                <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {paginatedVideos.map(video => (
-                            <VideoCard key={video.id} video={video} />
-                        ))}
-                    </div>
-
-                    {/* Pagination Controls */}
-                    {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-2 mt-12 mb-4">
-                            <button
-                                onClick={() => handlePageChange(1)}
-                                disabled={currentPage === 1}
-                                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                                title="第一页"
-                            >
-                                <ChevronsLeft size={20} />
-                            </button>
-                            <button
-                                onClick={() => handlePageChange(currentPage - 1)}
-                                disabled={currentPage === 1}
-                                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                                title="上一页"
-                            >
-                                <ChevronLeft size={20} />
-                            </button>
-                            
-                            <span className="text-sm font-medium text-gray-700 px-4">
-                                Page {currentPage} of {totalPages}
-                            </span>
-
-                            <button
-                                onClick={() => handlePageChange(currentPage + 1)}
-                                disabled={currentPage === totalPages}
-                                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                                title="下一页"
-                            >
-                                <ChevronRight size={20} />
-                            </button>
-                            <button
-                                onClick={() => handlePageChange(totalPages)}
-                                disabled={currentPage === totalPages}
-                                className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                                title="最后一页"
-                            >
-                                <ChevronsRight size={20} />
-                            </button>
-                        </div>
-                    )}
-                </>
-            ) : (
-                <div className="py-20 text-center">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                        <Filter size={24} className="text-gray-400" />
-                    </div>
-                    <p className="text-gray-500 font-medium">未找到符合条件的内容</p>
-                    <button 
-                        onClick={() => {
-                            setSelectedSub('All');
-                            setSelectedYear('All');
-                            setSearchTerm('');
-                        }}
-                        className="mt-2 text-sm text-bili-blue hover:underline"
-                    >
-                        清除所有筛选
-                    </button>
-                </div>
-            )}
+            <p className="text-sm text-gray-500 mt-0.5">{categoryConfig.description}</p>
+          </div>
         </div>
-    );
+
+        {/* Search Input */}
+        <div className="relative w-full md:w-72">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="搜索标题、子分类或出演者..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-bili-pink/20 focus:border-bili-pink transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Filters Toolbar */}
+      <div className="py-5 space-y-3">
+        {/* Row 1: Sub-categories & Year */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+            <Filter className="w-4 h-4 text-gray-400 mr-1 flex-shrink-0" />
+            {subCategories.map(sub => (
+              <button
+                key={sub}
+                onClick={() => setSelectedSubCat(sub)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
+                  selectedSubCat === sub
+                    ? 'bg-gray-900 text-white shadow-sm'
+                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200/80'
+                }`}
+              >
+                {sub === 'ALL' ? '全部子分类' : sub}
+              </button>
+            ))}
+          </div>
+
+          {years.length > 2 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400 font-medium">年份:</span>
+              <select
+                value={selectedYear}
+                onChange={e => setSelectedYear(e.target.value)}
+                className="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-bili-pink"
+              >
+                <option value="ALL">全部年份</option>
+                {years
+                  .filter(y => y !== 'ALL')
+                  .map(y => (
+                    <option key={y} value={y}>
+                      {y}年
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* Row 2: 3rd-level Performer/Cast Tags (only shown when tags exist in this category) */}
+        {availableTags.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap pt-1">
+            <span className="inline-flex items-center gap-1 text-xs text-gray-400 mr-1">
+              <Users className="w-3.5 h-3.5" />
+              <span>出演/标签:</span>
+            </span>
+            <button
+              onClick={() => setSelectedTag('ALL')}
+              className={`px-2.5 py-1 rounded-md text-xs transition-all ${
+                selectedTag === 'ALL'
+                  ? 'bg-bili-pink text-white font-medium'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              全部
+            </button>
+            {availableTags.map(({ tag, count }) => (
+              <button
+                key={tag}
+                onClick={() => setSelectedTag(selectedTag === tag ? 'ALL' : tag)}
+                className={`px-2.5 py-1 rounded-md text-xs transition-all flex items-center gap-1 ${
+                  selectedTag === tag
+                    ? 'bg-bili-pink text-white font-medium'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <span>{tag}</span>
+                <span className={`text-[10px] ${selectedTag === tag ? 'text-pink-100' : 'text-gray-400'}`}>
+                  {count}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Video Grid */}
+      {paginatedVideos.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {paginatedVideos.map(video => (
+              <VideoCard
+                key={video.id}
+                video={video}
+                onVideoClick={onVideoClick}
+                onTagSelect={tag => setSelectedTag(prev => (prev === tag ? 'ALL' : tag))}
+              />
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-10">
+              <button
+                onClick={() => {
+                  setCurrentPage(p => Math.max(1, p - 1));
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-xs font-mono text-gray-500 px-3">
+                第 {currentPage} / {totalPages} 页
+              </span>
+              <button
+                onClick={() => {
+                  setCurrentPage(p => Math.min(totalPages, p + 1));
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
+          <p className="text-gray-400 text-sm">没有找到符合筛选条件的视频</p>
+          <button
+            onClick={() => {
+              setSelectedSubCat('ALL');
+              setSelectedTag('ALL');
+              setSelectedYear('ALL');
+              setSearchQuery('');
+            }}
+            className="mt-3 text-xs text-bili-pink hover:underline font-medium"
+          >
+            重置筛选条件
+          </button>
+        </div>
+      )}
+    </div>
+  );
 };

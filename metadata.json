@@ -1,5 +1,6 @@
 {
   "name": "KESSOKU RECORD",
   "description": "A navigation site for Bocchi the Rock! videos on Bilibili, featuring Anime, Radio, LIVE, and Stage plays.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": []
 }

@@ -3,8 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KESSOKU RECORD</title>
+    <title>BOCCHI THE RECORD | 孤独摇滚! 索引</title>
+    <meta name="description" content="A navigation site for Bocchi the Rock! videos on Bilibili, featuring Anime, Radio, LIVE, and Stage plays." />
+    <meta property="og:title" content="BOCCHI THE RECORD | 孤独摇滚! 索引" />
+    <meta property="og:description" content="A navigation site for Bocchi the Rock! videos on Bilibili, featuring Anime, Radio, LIVE, and Stage plays." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -14,14 +20,21 @@
               bili: {
                 pink: '#FB7299',
                 blue: '#00AEEC',
-                dark: '#18191C',
-                gray: '#9499A0',
-                bg: '#F1F2F3'
+                dark: '#0F172A',
+                gray: '#64748B',
+                bg: '#F8FAFC'
+              },
+              kessoku: {
+                bocchi: '#EC4899',
+                nijika: '#F59E0B',
+                ryo: '#0284C7',
+                kita: '#EF4444'
               }
             },
             fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
-              display: ['Oswald', 'Impact', 'sans-serif'] 
+              sans: ['"Plus Jakarta Sans"', '"PingFang SC"', '"Hiragino Sans GB"', '"Microsoft YaHei"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+              display: ['"Plus Jakarta Sans"', '"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace']
             }
           }
         }
@@ -31,15 +44,16 @@
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.0"
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-bili-bg text-bili-dark antialiased">
+  <body class="bg-[#F8FAFC] text-slate-900 antialiased selection:bg-pink-500 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

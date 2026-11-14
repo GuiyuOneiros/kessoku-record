@@ -1,9 +1,7 @@
-本项目全程由google aistudio协助完成
-
-# 🎸 BOCCHI THE RECORD 
+# 🎸 BOCCHI THE RECORD (结束记录)
 
 > **Unofficial Bilibili Index for Kessoku Band**  
-> 《孤独摇滚！》相关视频索引数据库
+> 《孤独摇滚！》B站二创与官方视频索引数据库
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![React](https://img.shields.io/badge/React-18-blue)
@@ -12,7 +10,7 @@
 
 ## 📖 项目简介
 
-**BOCCHI THE RECORD** 是一个专为《孤独摇滚！》(Bocchi the Rock!) 粉丝打造的现代化静态导航站。它旨在整理和索引 Bilibili 上的相关高质量视频，包括动画正片、广播局、演唱会 Live、声优活动以及舞台剧等。
+**KESSOKU RECORD** 是一个专为《孤独摇滚！》(Bocchi the Rock!) 粉丝打造的现代化静态导航站。它旨在整理和索引 Bilibili 上的相关高质量视频，包括动画正片、广播局、演唱会 Live、声优活动以及舞台剧等。
 
 本项目采用 **Serverless** 架构，前端部署在边缘网络（Cloudflare Pages / EdgeOne Pages），数据存储采用 KV 键值数据库，无需维护传统后端服务器。
 
@@ -72,8 +70,9 @@
 
 ### 选项 A: Cloudflare Pages (推荐)
 
-1.  **创建项目**: 连接 GitHub 仓库，选择 `Create a project`。或者直接上传压缩包。
+1.  **创建项目**: 连接 GitHub 仓库，选择 `Create a project`。
 2.  **构建配置**:
+    *   **Framework preset**: Vite
     *   **Build command**: `npm run build`
     *   **Build output directory**: `dist`
 3.  **绑定 KV 存储 (重要)**:
@@ -87,8 +86,11 @@
 
 ### 选项 B: 腾讯云 EdgeOne Pages
 
-1.  **创建项目**: 导入 GitHub 仓库或者上传压缩包。
-2.  **环境配置**:
+1.  **创建项目**: 导入 GitHub 仓库。
+2.  **构建配置**:
+    *   **构建命令**: `npm run build`
+    *   **输出目录**: `dist`
+3.  **环境配置**:
     *   在项目概览页，找到 **环境配置**。
     *   **KV 存储绑定**: 变量名称填 `KESSOKU_KV`，选择或创建你的 KV 命名空间。
     *   **环境变量**: 添加 `ADMIN_SECRET`，填入你的管理员 UUID。
@@ -101,16 +103,19 @@
 访问 `https://你的域名.com/#/admin`。
 
 ### 2. 身份验证
-输入项目 `constants.ts` 文件中配置的 `ADMIN_UUID`（默认为 `815dd683-be8f-44f0-b0af-a3ed9aadd65d`，**部署前请务必修改**）。
+输入项目 `constants.ts` 文件中配置的 `ADMIN_UUID`（默认为 `7f8e9d0c-1b2a-3c4d-5e6f-789012345678`，**部署前请务必修改**）。
 
 ### 3. 数据管理
 *   **添加视频**: 填写标题、链接，选择分类、日期。支持手动输入子分类（如“2025新番”），前台会自动生成对应的筛选标签。
 *   **编辑视频**: 点击列表右侧的 ✏️ 图标修改现有内容。
 *   **日期选择**: 系统会自动将时间修正为当天的中午 12:00，避免时区偏差。
 
-### 4. 备份策略
-*    可通过导入/导出json功能备份数据
-*    「导入JSON」 ➔ 「同步到云端 KV」
+### 4. 备份策略 (最佳实践)
+虽然数据存储在 KV 中，但为了数据安全和方便开源协作：
+1.  在后台点击 **"下载 constants.ts"** 按钮。
+2.  将下载的文件覆盖项目源码中的 `src/constants.ts` (或根目录下的 `constants.ts`)。
+3.  提交代码到 GitHub (`git commit & push`)。
+    *   这样即便是 KV 数据库丢失，新用户访问时也能看到截至备份时的完整数据。
 
 ---
 
@@ -126,11 +131,3 @@
 ## 📄 License
 
 MIT License
-
----
-
-### 以上内容大部分为AI自动生成，仅作少数修改。
-
-本项目为公开展示用。为与已搭建网站做好区分，密码部分已做脱敏修改。
-
-自行搭建请务必 **修改密码**
